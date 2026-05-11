@@ -337,7 +337,7 @@ function pinPress(d) {
   pinBuffer += d;
   atualizarDots();
   if (pinBuffer.length === 6) {
-    setTimeout(validarPin, 150);
+    setTimeout(() => validarPin(pinBuffer), 150);
   }
 }
 function pinDel() {
@@ -350,7 +350,8 @@ function atualizarDots(erro) {
     dot.className = "pin-dot" + (i < pinBuffer.length ? " filled" : "") + (erro ? " error" : "");
   }
 }
-async function validarPin() {
+async function validarPin(pinAtual) {
+  pinAtual = pinAtual || pinBuffer;
   try {
     // Busca o hash do PIN salvo no Supabase
     const res = await fetch(SUPABASE_URL + "/rest/v1/configuracoes?chave=eq.pin_relatorios&select=valor", { headers: H });
@@ -358,10 +359,11 @@ async function validarPin() {
     if (!data || !data[0]) throw new Error("PIN não encontrado");
 
     const hashSalvo = data[0].valor;
-    const hashDigitado = await md5(pinBuffer);
+    const hashDigitado = await md5(pinAtual);
 
     if (hashDigitado === hashSalvo) {
       pinAutorizado = true;
+      pinBuffer = "";
       document.getElementById("overlay-pin").classList.add("hidden");
       setTab("relatorios");
     } else {

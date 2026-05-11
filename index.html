@@ -353,25 +353,26 @@ function atualizarDots(erro) {
 async function validarPin(pinAtual) {
   pinAtual = pinAtual || pinBuffer;
   try {
-    // Busca o hash do PIN salvo no Supabase
     const res = await fetch(SUPABASE_URL + "/rest/v1/configuracoes?chave=eq.pin_relatorios&select=valor", { headers: H });
     const data = await res.json();
-    if (!data || !data[0]) throw new Error("PIN não encontrado");
-
-    const hashSalvo = data[0].valor;
-    const hashDigitado = await md5(pinAtual);
-
-    if (hashDigitado === hashSalvo) {
+    console.log("Supabase retornou:", JSON.stringify(data));
+    console.log("PIN digitado:", pinAtual);
+    if (!data || !data[0]) throw new Error("PIN não encontrado no Supabase");
+    const pinSalvo = data[0].valor;
+    console.log("PIN salvo:", pinSalvo);
+    if (pinAtual === pinSalvo) {
       pinAutorizado = true;
       pinBuffer = "";
       document.getElementById("overlay-pin").classList.add("hidden");
       setTab("relatorios");
     } else {
+      console.log("PIN incorreto:", pinAtual, "!=", pinSalvo);
       atualizarDots(true);
       document.getElementById("pin-error").textContent = "PIN incorreto. Tente novamente.";
       setTimeout(() => { pinBuffer = ""; atualizarDots(); }, 1200);
     }
   } catch(e) {
+    console.log("Erro:", e.message);
     atualizarDots(true);
     document.getElementById("pin-error").textContent = "Erro ao verificar PIN. Verifique a conexão.";
     setTimeout(() => { pinBuffer = ""; atualizarDots(); }, 1500);
